@@ -1,4 +1,19 @@
 import { prisma } from '@/lib/prisma';
+import { createServerSupabaseClient } from '@/lib/supabase/server';
+
+function isValidUrl(url: string | undefined): boolean {
+  if (!url) return false
+  try { new URL(url); return true }
+  catch { return false }
+}
+
+export async function getCurrentUser() {
+  if (!isValidUrl(process.env.NEXT_PUBLIC_SUPABASE_URL)) return null
+  const supabase = await createServerSupabaseClient()
+  const { data: { user: authUser } } = await supabase.auth.getUser()
+  if (!authUser) return null
+  return prisma.user.findUnique({ where: { authId: authUser.id } })
+}
 
 export async function getThanksFeed(take?: number) {
   return prisma.thank.findMany({
@@ -43,7 +58,7 @@ export async function getUserStats(id: string) {
     prisma.thank.count({ where: { receiverId: id, isVerified: true } }),
     prisma.user.findUnique({
       where: { id },
-      select: { id: true, trustScore: true, name: true, profession: true, bio: true, createdAt: true, walletAddress: true },
+      select: { id: true, trustScore: true, name: true, profession: true, bio: true, profilePicture: true, createdAt: true },
     }),
   ]);
 

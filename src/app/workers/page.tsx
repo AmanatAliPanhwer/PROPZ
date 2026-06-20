@@ -1,7 +1,11 @@
-import { getWorkers } from '@/lib/queries';
+import { redirect } from 'next/navigation';
+import { getCurrentUser, getWorkers } from '@/lib/queries';
 import { WorkersSearch } from './WorkersSearch';
 
 export default async function WorkersPage() {
+  const currentUser = await getCurrentUser();
+  if (!currentUser) redirect('/login');
+
   const workers = await getWorkers();
 
   return (

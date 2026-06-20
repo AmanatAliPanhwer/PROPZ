@@ -28,9 +28,17 @@ export const ThankList = ({ initialThanks, emptyMessage, apiParams }: ThankListP
   const [hasMore, setHasMore] = useState(initialThanks.length >= 10);
   const sentinelRef = useRef<HTMLDivElement>(null);
   const loadingRef = useRef(false);
-  const cursorRef = useRef(
+  const cursorRef = useRef<string | null>(
     initialThanks.length > 0 ? initialThanks[initialThanks.length - 1].id : null
   );
+
+  // Reset when initialThanks changes (e.g. navigating between profiles)
+  useEffect(() => {
+    setItems(initialThanks);
+    cursorRef.current = initialThanks.length > 0 ? initialThanks[initialThanks.length - 1].id : null;
+    setHasMore(initialThanks.length >= 10);
+    loadingRef.current = false;
+  }, [initialThanks]);
 
   useEffect(() => {
     const sentinel = sentinelRef.current;

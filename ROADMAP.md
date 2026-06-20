@@ -9,8 +9,10 @@ Status markers: [x] done  [~] in progress  [ ] planned  [-] future
 ### Profiles
 - [x] Worker profile with name, profession, bio
 - [x] Stats card (received, sent, verified, trust score)
-- [x] Worker browse page with search filter
-- [x] Mock auth (first user in DB is "current user")
+- [x] Worker browse page with client-side search
+- [x] Inline header search (dropdown, profile pics, debounced server query)
+- [x] Edit profile in dashboard (inline editing, profile picture upload)
+- [x] Supabase Auth (Email/Password + Google OAuth, session via proxy.ts)
 
 ### Thank Posts
 - [x] Create Thank with note, tags, receiver
@@ -20,10 +22,9 @@ Status markers: [x] done  [~] in progress  [ ] planned  [-] future
 - [x] Verified badge on ThankCard
 
 ### Images
-- [x] Multi-image upload (drag-and-drop zone + click to browse)
-- [x] Progressive upload (each image uploads on drop via POST /api/upload)
+- [x] Multi-image upload (drag-and-drop zone + click to browse + camera)
+- [x] Progressive upload (each image uploads directly to Supabase Storage on select/drop)
 - [x] Upload preview grid with status indicators (spinner, check, retry)
-- [x] Camera capture button (mobile + desktop fallback)
 - [x] Aspect-ratio-responsive thumbnails (no cropping)
 - [x] Lightroom-style ImageViewer (full-screen overlay, zoom, nav, keyboard shortcuts)
 
@@ -32,15 +33,14 @@ Status markers: [x] done  [~] in progress  [ ] planned  [-] future
 - [x] Cursor-based pagination API (GET /api/thanks)
 - [x] Dashboard page (worker name heading, stats grid, received thanks)
 - [x] Profile page (stats + received thanks via infinite scroll)
-- [x] Workers page with client-side search
 
 ### Design System
 - [x] Neo Brutalist theme (bold borders, hard shadows, high contrast)
 - [x] Space Grotesk typography
 - [x] Custom accent colors (yellow, pink, blue, green)
 - [x] Reusable UI components (Button, Card, Input, Textarea)
-- [x] Feature components (ThankCard, ThankList, StatsCard, ThankForm)
-- [x] Header-only navigation with active-link highlighting
+- [x] Feature components (ThankCard, ThankList, StatsCard, ThankForm, DashboardProfile)
+- [x] Header-only navigation with active-link highlighting and inline search
 - [x] Custom scrollbar (Neo Brutalist style)
 - [x] Warm paper background + tinted cards
 
@@ -65,18 +65,10 @@ Status markers: [x] done  [~] in progress  [ ] planned  [-] future
 - [ ] Same-recipient cooldown
 - [ ] Trust score formula (account age, verification level, reports)
 - [ ] Fraud detection (rapid posting, duplicate content)
-- [ ] Email verification on registration
 
 ---
 
-## Phase 3 — Accounts & Notifications
-
-### Real Authentication
-- [ ] Registration flow (name, email, profession, bio, photo)
-- [ ] Email verification
-- [ ] Login/password
-- [ ] Session management
-- [ ] Replace mock "first user" auth
+## Phase 3 — Notifications
 
 ### Notifications
 - [ ] In-app notification when thanked
@@ -151,7 +143,12 @@ Status markers: [x] done  [~] in progress  [ ] planned  [-] future
 
 ## Technical Debt & Polish
 
-- [ ] Image optimization (compression, resizing on upload)
+- [x] PostgreSQL + Supabase (replaced SQLite / Prisma v7 adapter-pg)
+- [x] Supabase Auth SSR (proxy.ts convention instead of deprecated middleware.ts)
+- [x] Supabase Storage RLS policies (public read, authenticated write)
+- [x] Server Actions for mutations (createThank, updateProfile, searchWorkers)
+- [x] Manual public URL construction for Storage files (workaround for getPublicUrl() bug)
+- [ ] Image optimization (compression, resizing on upload via Supabase Image Transform)
 - [ ] Responsive design audit (tablet, mobile)
 - [ ] Loading states and skeletons
 - [ ] Error boundaries
@@ -163,4 +160,5 @@ Status markers: [x] done  [~] in progress  [ ] planned  [-] future
 - [ ] CI/CD pipeline
 - [ ] Production deployment guide
 - [ ] Rate limiting on API routes
-- [ ] File upload cleanup (orphaned images)
+- [ ] File upload cleanup (orphaned images in Storage)
+- [ ] Migrate legacy images from public/uploads/ to Supabase Storage

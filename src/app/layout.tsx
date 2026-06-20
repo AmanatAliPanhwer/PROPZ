@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Space_Grotesk } from "next/font/google";
 import { Header } from "@/components/layout/Header";
+import { getCurrentUser } from "@/lib/queries";
 import "./globals.css";
 
 const spaceGrotesk = Space_Grotesk({
@@ -13,15 +14,19 @@ export const metadata: Metadata = {
   description: "A decentralized appreciation platform for real workers.",
 };
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const currentUser = await getCurrentUser();
+
   return (
-    <html lang="en" className={`${spaceGrotesk.variable} h-full antialiased`}>
-      <body className="min-h-full flex flex-col">
-        <Header />
+    <html lang="en" className={`${spaceGrotesk.variable} h-full antialiased`} suppressHydrationWarning>
+      <body className="min-h-full flex flex-col" suppressHydrationWarning>
+        <Header
+          initialUser={currentUser ? { name: currentUser.name, picture: currentUser.profilePicture } : null}
+        />
         <main className="flex-1 p-6 max-w-5xl mx-auto w-full">
           {children}
         </main>

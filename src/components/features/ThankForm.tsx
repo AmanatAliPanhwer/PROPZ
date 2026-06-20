@@ -5,6 +5,7 @@ import { Textarea } from '@/components/ui/Input';
 import { Button } from '@/components/ui/Button';
 import { Card } from '@/components/ui/Card';
 import { createThank } from '@/lib/actions';
+import { createClient } from '@/lib/supabase/client';
 import { FiCamera } from 'react-icons/fi';
 
 interface ThankFormProps {
@@ -27,18 +28,24 @@ const MAX_SIZE = 5 * 1024 * 1024;
 
 export const ThankForm = ({ senderId, workers, tags, preselectedReceiverId }: ThankFormProps) => {
   const [uploads, setUploads] = useState<UploadItem[]>([]);
+  const uploadsRef = useRef<UploadItem[]>([]);
+  uploadsRef.current = uploads;
   const [dragOver, setDragOver] = useState(false);
   const fileRef = useRef<HTMLInputElement>(null);
   const cameraRef = useRef<HTMLInputElement>(null);
+  const supabase = createClient();
   const otherWorkers = workers.filter((w) => w.id !== senderId);
 
   const [state, formAction, pending] = useActionState(
     async (_prev: unknown, formData: FormData) => {
-      formData.set('senderId', senderId);
-      formData.set('imageUrls', JSON.stringify(uploads.filter((u) => u.status === 'done').map((u) => u.url)));
+      const urls = uploadsRef.current
+        .filter((u) => u.status === 'done')
+        .map((u) => u.url);
+      formData.set('imageUrls', JSON.stringify(urls));
       try {
         await createThank(formData);
       } catch (e) {
+        if (e && typeof e === 'object' && 'digest' in e) throw e;
         return { error: e instanceof Error ? e.message : 'Something went wrong' };
       }
       return { error: null };
@@ -52,15 +59,20 @@ export const ThankForm = ({ senderId, workers, tags, preselectedReceiverId }: Th
 
     setUploads((prev) => [...prev, { id, preview, status: 'uploading' }]);
 
-    const body = new FormData();
-    body.append('file', file);
-
     try {
-      const res = await fetch('/api/upload', { method: 'POST', body });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error || 'Upload failed');
+      const ext = file.name.split('.').pop() || 'jpg';
+      const filename = `${crypto.randomUUID()}.${ext}`;
+
+      const { error: uploadError } = await supabase.storage
+        .from('thank-images')
+        .upload(filename, file);
+
+      if (uploadError) throw uploadError;
+
+      const url = `${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/thank-images/${filename}`;
+
       setUploads((prev) =>
-        prev.map((u) => (u.id === id ? { ...u, status: 'done', url: data.url } : u))
+        prev.map((u) => (u.id === id ? { ...u, status: 'done', url } : u))
       );
     } catch (e) {
       setUploads((prev) =>
@@ -71,7 +83,7 @@ export const ThankForm = ({ senderId, workers, tags, preselectedReceiverId }: Th
         )
       );
     }
-  }, []);
+  }, [supabase]);
 
   const handleFiles = useCallback(
     (files: FileList) => {

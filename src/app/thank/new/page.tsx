@@ -1,25 +1,25 @@
-import { getWorkers, getAllTags } from '@/lib/queries';
-import { ThankForm } from '@/components/features/ThankForm';
 import { redirect } from 'next/navigation';
+import { getCurrentUser, getWorkers, getAllTags } from '@/lib/queries';
+import { ThankForm } from '@/components/features/ThankForm';
 
-export default async function NewThankPage(props: PageProps<'/thank/new'>) {
-  const searchParams = await props.searchParams;
+export default async function NewThankPage({
+  searchParams: searchParamsPromise,
+}: {
+  searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
+}) {
+  const searchParams = await searchParamsPromise;
+  const currentUser = await getCurrentUser();
+  if (!currentUser) redirect('/login');
+
   const [workers, tags] = await Promise.all([getWorkers(), getAllTags()]);
 
-  if (workers.length === 0) {
-    redirect('/dashboard');
-  }
-
-  // MVP: use first worker as logged-in sender
-  const senderId = workers[0].id;
-
   const preselected = searchParams?.receiverId as string | undefined;
-  const preselectedReceiverId = preselected === senderId ? undefined : preselected;
+  const preselectedReceiverId = preselected === currentUser.id ? undefined : preselected;
 
   return (
     <div className="max-w-lg mx-auto">
       <ThankForm
-        senderId={senderId}
+        senderId={currentUser.id}
         workers={workers}
         tags={tags}
         preselectedReceiverId={preselectedReceiverId}

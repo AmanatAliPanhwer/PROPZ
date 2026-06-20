@@ -1,37 +1,15 @@
-import { getWorkers, getUserStats } from '@/lib/queries';
+import { redirect } from 'next/navigation';
+import { getCurrentUser } from '@/lib/queries';
 import { prisma } from '@/lib/prisma';
-import { Card } from '@/components/ui/Card';
 import { StatsCard } from '@/components/features/StatsCard';
+import { DashboardProfile } from '@/components/features/DashboardProfile';
 import { ThankList } from '@/components/features/ThankList';
-import { Button } from '@/components/ui/Button';
-import { Input } from '@/components/ui/Input';
-import { createUser } from '@/lib/actions';
+import Link from 'next/link';
 
 export default async function DashboardPage() {
-  const workers = await getWorkers();
+  const currentUser = await getCurrentUser();
+  if (!currentUser) redirect('/login');
 
-  if (workers.length === 0) {
-    return (
-      <div className="flex flex-col gap-6">
-        <Card>
-          <h1 className="text-2xl font-black uppercase mb-2">Welcome to PROPZ</h1>
-          <p className="text-sm font-medium text-black/50 mb-6">
-            Create a worker profile to get started.
-          </p>
-          <form action={createUser} className="flex flex-col gap-4 max-w-md">
-            <Input label="Name" name="name" placeholder="Your name" required />
-            <Input label="Profession" name="profession" placeholder="e.g. Plumber, Teacher, Chef" />
-            <Input label="Bio" name="bio" placeholder="Tell us about yourself" />
-            <Button type="submit" variant="primary">
-              Create Profile
-            </Button>
-          </form>
-        </Card>
-      </div>
-    );
-  }
-
-  const currentUser = await getUserStats(workers[0].id);
   const initialThanks = await prisma.thank.findMany({
     where: { receiverId: currentUser.id },
     include: {
@@ -43,24 +21,31 @@ export default async function DashboardPage() {
     take: 10,
   });
 
+  const receivedCount = await prisma.thank.count({ where: { receiverId: currentUser.id } });
+  const sentCount = await prisma.thank.count({ where: { senderId: currentUser.id } });
+  const verifiedCount = await prisma.thank.count({ where: { receiverId: currentUser.id, isVerified: true } });
+
   return (
     <div className="flex flex-col gap-6">
-      <div>
-        <h1 className="text-3xl font-black uppercase">{currentUser.name}</h1>
-        {currentUser.profession && (
-          <p className="text-sm font-medium text-black/50 mt-1">{currentUser.profession}</p>
-        )}
-      </div>
+      <DashboardProfile user={currentUser} />
 
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-        <StatsCard title="Received" value={currentUser.receivedCount} color="yellow" />
-        <StatsCard title="Sent" value={currentUser.sentCount} color="blue" />
-        <StatsCard title="Verified" value={currentUser.verifiedCount} color="green" />
+        <StatsCard title="Received" value={receivedCount} color="yellow" />
+        <StatsCard title="Sent" value={sentCount} color="blue" />
+        <StatsCard title="Verified" value={verifiedCount} color="green" />
         <StatsCard title="Trust Score" value={currentUser.trustScore} color="pink" />
       </div>
 
       <div className="flex flex-col gap-3">
-        <h2 className="text-lg font-black uppercase">Thanks Received</h2>
+        <div className="flex items-center justify-between">
+          <h2 className="text-lg font-black uppercase">Thanks Received</h2>
+          <Link
+            href="/thank/new"
+            className="px-4 py-2 bg-neo-yellow border-4 border-black font-bold uppercase text-sm neo-shadow hover:neo-shadow-lg transition-all"
+          >
+            Send Thank You
+          </Link>
+        </div>
         <ThankList
           initialThanks={initialThanks}
           emptyMessage="No thanks received yet."

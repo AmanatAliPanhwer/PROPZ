@@ -1,7 +1,11 @@
-import { getThanksFeed } from '@/lib/queries';
+import { redirect } from 'next/navigation';
+import { getThanksFeed, getCurrentUser } from '@/lib/queries';
 import { ThankList } from '@/components/features/ThankList';
 
 export default async function Home() {
+  const user = await getCurrentUser();
+  if (!user) redirect('/login');
+
   const thanks = await getThanksFeed(10);
 
   return (
