@@ -28,3 +28,33 @@ body {
 @utility neo-shadow-sm {
   box-shadow: 2px 2px 0px 0px #000;
 }
+
+/* Custom scrollbar — Neo Brutalist */
+::-webkit-scrollbar {
+  width: 14px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--color-neo-bg);
+  border-left: 2px solid #000;
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--color-neo-yellow);
+  border: 2px solid #000;
+  box-shadow: inset 2px 2px 0 rgba(0,0,0,0.15), inset -2px -2px 0 rgba(0,0,0,0.15);
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #fde93a;
+}
+
+::-webkit-scrollbar-thumb:active {
+  background: #fcd34d;
+  box-shadow: inset 2px 2px 0 rgba(0,0,0,0.3);
+}
+
+* {
+  scrollbar-width: auto;
+  scrollbar-color: var(--color-neo-yellow) var(--color-neo-bg);
+}

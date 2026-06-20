@@ -5,6 +5,7 @@ import { Textarea } from '@/components/ui/Input';
 import { Button } from '@/components/ui/Button';
 import { Card } from '@/components/ui/Card';
 import { createThank } from '@/lib/actions';
+import { FiCamera } from 'react-icons/fi';
 
 interface ThankFormProps {
   senderId: string;
@@ -28,6 +29,7 @@ export const ThankForm = ({ senderId, workers, tags, preselectedReceiverId }: Th
   const [uploads, setUploads] = useState<UploadItem[]>([]);
   const [dragOver, setDragOver] = useState(false);
   const fileRef = useRef<HTMLInputElement>(null);
+  const cameraRef = useRef<HTMLInputElement>(null);
   const otherWorkers = workers.filter((w) => w.id !== senderId);
 
   const [state, formAction, pending] = useActionState(
@@ -105,6 +107,12 @@ export const ThankForm = ({ senderId, workers, tags, preselectedReceiverId }: Th
     const files = fileRef.current?.files;
     if (files && files.length > 0) handleFiles(files);
     if (fileRef.current) fileRef.current.value = '';
+  };
+
+  const handleCameraCapture = () => {
+    const file = cameraRef.current?.files?.[0];
+    if (file) uploadFile(file);
+    if (cameraRef.current) cameraRef.current.value = '';
   };
 
   const removeUpload = (id: string) => {
@@ -186,6 +194,22 @@ export const ThankForm = ({ senderId, workers, tags, preselectedReceiverId }: Th
               {dragOver ? 'Drop images here' : 'Drop images here or click to browse'}
             </p>
             <p className="text-xs text-black/50 mt-1">JPG, PNG, WebP, GIF — max 5MB each</p>
+            <input
+              ref={cameraRef}
+              type="file"
+              accept="image/*"
+              capture="environment"
+              onChange={handleCameraCapture}
+              className="hidden"
+            />
+            <button
+              type="button"
+              onClick={(e) => { e.stopPropagation(); cameraRef.current?.click(); }}
+              className="mt-3 px-4 py-1.5 border-2 border-black bg-white text-black font-bold text-xs uppercase neo-shadow-sm hover:bg-neo-yellow transition-all flex items-center gap-1.5 mx-auto"
+            >
+              <FiCamera className="text-sm" />
+              Camera
+            </button>
           </div>
 
           {/* Upload previews */}
