@@ -13,13 +13,16 @@ export default async function NewThankPage(props: PageProps<'/thank/new'>) {
   // MVP: use first worker as logged-in sender
   const senderId = workers[0].id;
 
+  const preselected = searchParams?.receiverId as string | undefined;
+  const preselectedReceiverId = preselected === senderId ? undefined : preselected;
+
   return (
     <div className="max-w-lg mx-auto">
       <ThankForm
         senderId={senderId}
         workers={workers}
         tags={tags}
-        preselectedReceiverId={searchParams?.receiverId as string | undefined}
+        preselectedReceiverId={preselectedReceiverId}
       />
     </div>
   );

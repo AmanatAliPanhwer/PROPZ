@@ -9,9 +9,15 @@ export async function createThank(formData: FormData) {
   const receiverId = formData.get('receiverId') as string;
   const note = formData.get('note') as string;
   const tagNames = formData.getAll('tags') as string[];
+  const imageUrlsRaw = formData.get('imageUrls') as string;
+  const images: string[] = imageUrlsRaw ? JSON.parse(imageUrlsRaw) : [];
 
   if (!senderId || !receiverId || !note) {
     throw new Error('Missing required fields');
+  }
+
+  if (senderId === receiverId) {
+    throw new Error('You cannot thank yourself');
   }
 
   await prisma.thank.create({
@@ -19,7 +25,7 @@ export async function createThank(formData: FormData) {
       senderId,
       receiverId,
       note,
-      images: '[]',
+      images: JSON.stringify(images),
       tags: {
         connectOrCreate: tagNames.filter(Boolean).map((name) => ({
           where: { name },
