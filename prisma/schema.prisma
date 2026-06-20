@@ -16,10 +16,20 @@ model User {
   profession     String?
   bio            String?
   trustScore     Int      @default(0)
+  role           String   @default("USER")
+  verificationLevel String @default("NONE")
+  isSuspended    Boolean  @default(false)
+  suspendedAt    DateTime?
+  suspensionReason String?
+  lastThankAt    DateTime?
   createdAt      DateTime @default(now())
 
-  sentThanks     Thank[] @relation("SentThanks")
-  receivedThanks Thank[] @relation("ReceivedThanks")
+  sentThanks        Thank[]              @relation("SentThanks")
+  receivedThanks    Thank[]              @relation("ReceivedThanks")
+  verificationRequests VerificationRequest[] @relation("VerificationRequestUser")
+  reviewedRequests  VerificationRequest[]    @relation("VerificationRequestReviewer")
+  reports          Report[]              @relation("ReportReporter")
+  resolvedReports  Report[]              @relation("ReportResolver")
 }
 
 model Thank {
@@ -36,10 +46,46 @@ model Thank {
   receiver   User     @relation("ReceivedThanks", fields: [receiverId], references: [id])
 
   tags       Tag[]    @relation("ThankTags")
+
+  isFlagged  Boolean  @default(false)
+  flaggedAt  DateTime?
+  flagReason String?
+  reports    Report[]
 }
 
 model Tag {
   id     String  @id @default(cuid())
   name   String  @unique
   thanks Thank[] @relation("ThankTags")
+}
+
+model VerificationRequest {
+  id          String   @id @default(cuid())
+  userId      String
+  type        String
+  status      String   @default("PENDING")
+  documentUrl String?
+  notes       String?
+  createdAt   DateTime @default(now())
+  reviewedAt  DateTime?
+  reviewedById String?
+
+  user     User  @relation("VerificationRequestUser", fields: [userId], references: [id])
+  reviewer User? @relation("VerificationRequestReviewer", fields: [reviewedById], references: [id])
+}
+
+model Report {
+  id          String   @id @default(cuid())
+  thankId     String
+  reporterId  String
+  reason      String
+  description String?
+  status      String   @default("PENDING")
+  createdAt   DateTime @default(now())
+  resolvedAt  DateTime?
+  resolvedById String?
+
+  thank    Thank  @relation(fields: [thankId], references: [id])
+  reporter User   @relation("ReportReporter", fields: [reporterId], references: [id])
+  resolver User?  @relation("ReportResolver", fields: [resolvedById], references: [id])
 }

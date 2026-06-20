@@ -4,6 +4,7 @@ import { prisma } from '@/lib/prisma';
 import { Card } from '@/components/ui/Card';
 import { StatsCard } from '@/components/features/StatsCard';
 import { ThankList } from '@/components/features/ThankList';
+import { VerificationBadge } from '@/components/features/VerificationBadge';
 import Link from 'next/link';
 
 export default async function ProfilePage({
@@ -22,8 +23,8 @@ export default async function ProfilePage({
   const initialThanks = await prisma.thank.findMany({
     where: { receiverId: id },
     include: {
-      sender: { select: { id: true, name: true, profession: true } },
-      receiver: { select: { id: true, name: true, profession: true } },
+      sender: { select: { id: true, name: true, profession: true, verificationLevel: true, profilePicture: true } },
+      receiver: { select: { id: true, name: true, profession: true, verificationLevel: true, profilePicture: true } },
       tags: true,
     },
     orderBy: { createdAt: 'desc' },
@@ -44,7 +45,10 @@ export default async function ProfilePage({
               />
             )}
             <div>
-              <h1 className="text-3xl font-black uppercase">{user.name}</h1>
+              <div className="flex items-center gap-3">
+                <h1 className="text-3xl font-black uppercase">{user.name}</h1>
+                <VerificationBadge level={(user as Record<string,unknown>).verificationLevel as string || 'NONE'} size="md" />
+              </div>
               {user.profession && (
                 <p className="text-lg font-medium text-black/60">{user.profession}</p>
               )}

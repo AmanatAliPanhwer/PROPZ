@@ -25,7 +25,7 @@ export default async function RootLayout({
     <html lang="en" className={`${spaceGrotesk.variable} h-full antialiased`} suppressHydrationWarning>
       <body className="min-h-full flex flex-col" suppressHydrationWarning>
         <Header
-          initialUser={currentUser ? { name: currentUser.name, picture: currentUser.profilePicture } : null}
+          initialUser={currentUser ? { name: currentUser.name, picture: currentUser.profilePicture, role: currentUser.role } : null}
         />
         <main className="flex-1 p-6 max-w-5xl mx-auto w-full">
           {children}

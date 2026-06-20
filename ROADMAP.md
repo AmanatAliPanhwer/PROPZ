@@ -49,22 +49,22 @@ Status markers: [x] done  [~] in progress  [ ] planned  [-] future
 ## Phase 2 — Trust & Moderation
 
 ### Verification
-- [ ] Worker verification badges (email, phone, ID)
-- [ ] Verification request flow (submit docs, admin review)
-- [ ] Verified badge display on profile and ThankCard
+- [x] Worker verification badges (email, phone, ID)
+- [x] Verification request flow (submit docs, admin review)
+- [x] Verified badge display on profile and ThankCard
 
 ### Moderation
-- [ ] Report button on ThankCard
-- [ ] Admin moderation dashboard
-- [ ] Flag/unflag content
-- [ ] Content removal with reason
-- [ ] User suspension
+- [x] Report button on ThankCard
+- [x] Admin moderation dashboard
+- [x] Flag/unflag content
+- [x] Content removal with reason
+- [x] User suspension
 
 ### Trust & Fraud Prevention
-- [ ] Per-user rate limits (max thanks per hour/day)
-- [ ] Same-recipient cooldown
-- [ ] Trust score formula (account age, verification level, reports)
-- [ ] Fraud detection (rapid posting, duplicate content)
+- [x] Per-user rate limits (max thanks per hour)
+- [x] Same-recipient cooldown
+- [x] Trust score formula (account age, verification level, reports)
+- [x] Fraud detection (rapid posting, duplicate content)
 
 ---
 

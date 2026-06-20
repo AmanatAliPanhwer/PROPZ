@@ -11,8 +11,8 @@ interface ThankItem {
   isVerified: boolean;
   senderId: string;
   receiverId: string;
-  sender: { id: string; name: string; profession: string | null };
-  receiver: { id: string; name: string; profession: string | null };
+  sender: { id: string; name: string; profession: string | null; profilePicture?: string | null };
+  receiver: { id: string; name: string; profession: string | null; profilePicture?: string | null };
   tags: { id: string; name: string }[];
 }
 

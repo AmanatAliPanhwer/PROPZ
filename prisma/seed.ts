@@ -61,15 +61,20 @@ async function main() {
       }
     }
 
+    const updateData: Record<string, unknown> = {
+      name: w.name,
+      email: w.email,
+      profession: w.profession,
+      bio: w.bio,
+      trustScore: w.trustScore,
+    };
+    if (w.name === 'Alice Kamau') {
+      updateData.role = 'ADMIN';
+      updateData.verificationLevel = 'FULL';
+    }
     const user = await prisma.user.upsert({
       where: { authId: authUser.id },
-      update: {
-        name: w.name,
-        email: w.email,
-        profession: w.profession,
-        bio: w.bio,
-        trustScore: w.trustScore,
-      },
+      update: updateData,
       create: {
         authId: authUser.id,
         email: w.email,
@@ -77,6 +82,7 @@ async function main() {
         profession: w.profession,
         bio: w.bio,
         trustScore: w.trustScore,
+        ...(w.name === 'Alice Kamau' ? { role: 'ADMIN', verificationLevel: 'FULL' } : {}),
       },
     });
     createdUsers.push({ id: user.id, name: user.name });
@@ -128,6 +134,70 @@ async function main() {
     createdThanks++;
   }
   console.log(`  Created ${createdThanks} thanks`);
+
+  // Create verification requests (sample data)
+  const alice = createdUsers.find((u) => u.name.startsWith('Alice'))!;
+  const bob = createdUsers.find((u) => u.name.startsWith('Bob'))!;
+  const grace = createdUsers.find((u) => u.name.startsWith('Grace'))!;
+  const helper = createdUsers.find((u) => u.name.startsWith('Helper'))!;
+
+  const existingRequests = await prisma.verificationRequest.count();
+  if (existingRequests === 0) {
+    await prisma.verificationRequest.create({
+      data: {
+        userId: bob.id,
+        type: 'ID',
+        status: 'PENDING',
+        notes: 'Uploaded national ID card for verification',
+      },
+    });
+    await prisma.verificationRequest.create({
+      data: {
+        userId: grace.id,
+        type: 'EMAIL',
+        status: 'APPROVED',
+        reviewedById: alice.id,
+        reviewedAt: new Date(),
+        notes: 'Email ownership confirmed',
+      },
+    });
+    console.log('  Created 2 verification requests');
+  }
+
+  // Create sample reports
+  const allThanks = await prisma.thank.findMany({ take: 10, orderBy: { createdAt: 'desc' } });
+  const existingReports = await prisma.report.count();
+  if (existingReports === 0 && allThanks.length > 0) {
+    await prisma.report.create({
+      data: {
+        thankId: allThanks[0].id,
+        reporterId: helper.id,
+        reason: 'INAPPROPRIATE',
+        description: 'This thank contains inappropriate language.',
+        status: 'PENDING',
+      },
+    });
+    if (allThanks.length > 1) {
+      await prisma.report.create({
+        data: {
+          thankId: allThanks[1].id,
+          reporterId: bob.id,
+          reason: 'SPAM',
+          description: 'Suspicious content, looks like spam.',
+          status: 'DISMISSED',
+          resolvedById: alice.id,
+          resolvedAt: new Date(),
+        },
+      });
+    }
+    console.log('  Created 2 reports');
+  }
+
+  // Update some user verification levels
+  await prisma.user.update({
+    where: { id: bob.id },
+    data: { verificationLevel: 'EMAIL' },
+  });
 
   console.log('Seed complete!');
   console.log(`  Test accounts (password: test123456):`);

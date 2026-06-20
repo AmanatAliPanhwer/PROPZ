@@ -3,7 +3,7 @@ import { NextResponse, type NextRequest } from 'next/server'
 
 type CookieItem = { name: string; value: string; options?: Record<string, unknown> }
 
-const publicPaths = ['/login', '/register', '/auth/callback', '/api/']
+const publicPaths = ['/login', '/register', '/auth/callback', '/api/', '/suspended']
 
 function isValidUrl(url: string | undefined): boolean {
   if (!url) return false
@@ -12,7 +12,6 @@ function isValidUrl(url: string | undefined): boolean {
 }
 
 export async function proxy(request: NextRequest) {
-  // Skip auth check if Supabase isn't configured yet
   if (!isValidUrl(process.env.NEXT_PUBLIC_SUPABASE_URL)) {
     return NextResponse.next({ request })
   }
@@ -44,10 +43,14 @@ export async function proxy(request: NextRequest) {
   if (!user && !isPublicPath) {
     const url = request.nextUrl.clone()
     url.pathname = '/login'
+    // Preserve auth error params
+    if (request.nextUrl.searchParams.has('error')) {
+      url.search = request.nextUrl.search
+    }
     return NextResponse.redirect(url)
   }
 
-  if (user && isPublicPath && request.nextUrl.pathname !== '/auth/callback') {
+  if (user && isPublicPath && !request.nextUrl.pathname.startsWith('/api/') && request.nextUrl.pathname !== '/auth/callback' && request.nextUrl.pathname !== '/suspended') {
     const url = request.nextUrl.clone()
     url.pathname = '/dashboard'
     return NextResponse.redirect(url)

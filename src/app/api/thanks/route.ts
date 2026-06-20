@@ -13,8 +13,8 @@ export async function GET(request: NextRequest) {
   const items = await prisma.thank.findMany({
     where,
     include: {
-      sender: { select: { id: true, name: true, profession: true } },
-      receiver: { select: { id: true, name: true, profession: true } },
+      sender: { select: { id: true, name: true, profession: true, verificationLevel: true, profilePicture: true } },
+      receiver: { select: { id: true, name: true, profession: true, verificationLevel: true, profilePicture: true } },
       tags: true,
     },
     orderBy: { createdAt: 'desc' },

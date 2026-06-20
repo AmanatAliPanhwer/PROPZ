@@ -1,7 +1,7 @@
 'use client'
 
-import { useState } from 'react'
-import { useRouter } from 'next/navigation'
+import { useState, useEffect } from 'react'
+import { useRouter, useSearchParams } from 'next/navigation'
 import Link from 'next/link'
 import { createClient } from '@/lib/supabase/client'
 import { Button } from '@/components/ui/Button'
@@ -15,6 +15,44 @@ export const LoginForm = () => {
   const [loading, setLoading] = useState(false)
   const router = useRouter()
   const supabase = createClient()
+  const searchParams = useSearchParams()
+
+  useEffect(() => {
+    const errCode = searchParams.get('error_code')
+    const errDesc = searchParams.get('error_description')
+    if (errCode === 'otp_expired') {
+      setError('The confirmation link has expired. Please request a new one below.')
+    } else if (errDesc) {
+      setError(decodeURIComponent(errDesc))
+    } else if (searchParams.get('error') === 'auth_failed') {
+      setError('Authentication failed. Please try again.')
+    } else if (searchParams.get('error') === 'no_code') {
+      setError('Invalid authentication link.')
+    } else if (searchParams.get('error') === 'no_user') {
+      setError('Could not find your account. Please sign up.')
+    }
+  }, [searchParams])
+
+  const handleResendConfirmation = async () => {
+    const emailValue = email || searchParams.get('email') || ''
+    if (!emailValue) {
+      setError('Enter your email above, then click Resend Confirmation.')
+      return
+    }
+    setLoading(true)
+    setError('')
+    const { error: resendError } = await supabase.auth.resend({
+      type: 'signup',
+      email: emailValue,
+    })
+    if (resendError) {
+      setError(resendError.message)
+    } else {
+      setError('')
+      alert('Confirmation email sent! Check your inbox.')
+    }
+    setLoading(false)
+  }
 
   const handleEmailLogin = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -72,6 +110,17 @@ export const LoginForm = () => {
 
         {error && (
           <p className="text-sm font-bold text-neo-pink">{error}</p>
+        )}
+
+        {searchParams.get('error_code') === 'otp_expired' && (
+          <button
+            type="button"
+            onClick={handleResendConfirmation}
+            disabled={loading}
+            className="text-xs font-bold underline underline-offset-2 hover:text-black/70 self-start"
+          >
+            {loading ? 'Sending...' : 'Resend confirmation email'}
+          </button>
         )}
 
         <Button type="submit" variant="primary" disabled={loading} fullWidth>

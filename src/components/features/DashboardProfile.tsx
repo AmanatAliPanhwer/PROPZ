@@ -2,11 +2,13 @@
 
 import { useState, useRef } from 'react'
 import { useRouter } from 'next/navigation'
+import Link from 'next/link'
 import { createClient } from '@/lib/supabase/client'
 import { updateProfile } from '@/lib/actions'
 import { Button } from '@/components/ui/Button'
 import { Input, Textarea } from '@/components/ui/Input'
 import { Card } from '@/components/ui/Card'
+import { VerificationBadge } from './VerificationBadge'
 
 interface DashboardProfileProps {
   user: {
@@ -15,6 +17,7 @@ interface DashboardProfileProps {
     profilePicture: string | null
     profession: string | null
     bio: string | null
+    verificationLevel?: string
   }
 }
 
@@ -161,12 +164,22 @@ export const DashboardProfile = ({ user: initialUser }: DashboardProfileProps) =
         />
       )}
       <div className="flex-1">
-        <h1 className="text-3xl font-black uppercase">{userData.name}</h1>
+        <div className="flex items-center gap-2">
+          <h1 className="text-3xl font-black uppercase">{userData.name}</h1>
+          <VerificationBadge level={userData.verificationLevel || 'NONE'} />
+        </div>
         {userData.profession && (
           <p className="text-sm font-medium text-black/50">{userData.profession}</p>
         )}
       </div>
-      <button
+      <div className="flex items-center gap-2">
+        <Link
+          href="/verify"
+          className="px-4 py-1.5 border-2 border-black bg-white text-black font-bold text-xs uppercase neo-shadow-sm hover:bg-neo-yellow transition-all shrink-0"
+        >
+          Verify
+        </Link>
+        <button
         type="button"
         onClick={() => {
           setName(userData.name)
@@ -181,6 +194,7 @@ export const DashboardProfile = ({ user: initialUser }: DashboardProfileProps) =
       >
         Edit
       </button>
+      </div>
     </div>
   )
 }

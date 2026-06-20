@@ -13,8 +13,8 @@ export default async function DashboardPage() {
   const initialThanks = await prisma.thank.findMany({
     where: { receiverId: currentUser.id },
     include: {
-      sender: { select: { id: true, name: true, profession: true } },
-      receiver: { select: { id: true, name: true, profession: true } },
+      sender: { select: { id: true, name: true, profession: true, verificationLevel: true, profilePicture: true } },
+      receiver: { select: { id: true, name: true, profession: true, verificationLevel: true, profilePicture: true } },
       tags: true,
     },
     orderBy: { createdAt: 'desc' },
