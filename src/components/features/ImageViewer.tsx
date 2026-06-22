@@ -42,6 +42,9 @@ export const ImageViewer = ({ images, initialIndex, onClose }: ImageViewerProps)
 
   return (
     <div
+      role="dialog"
+      aria-modal="true"
+      aria-label="Image viewer"
       className="fixed inset-0 z-[100] bg-black/90 flex flex-col items-center justify-center"
       onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}
     >
@@ -63,6 +66,7 @@ export const ImageViewer = ({ images, initialIndex, onClose }: ImageViewerProps)
           <button
             onClick={onClose}
             className="w-8 h-8 bg-neo-pink border-2 border-white text-black font-bold text-sm flex items-center justify-center neo-shadow-sm hover:scale-110 transition-transform"
+            aria-label="Close image viewer"
           >
             X
           </button>
@@ -74,6 +78,7 @@ export const ImageViewer = ({ images, initialIndex, onClose }: ImageViewerProps)
         <button
           onClick={goPrev}
           className="absolute left-4 top-1/2 -translate-y-1/2 w-12 h-12 bg-neo-yellow border-4 border-black text-black font-black text-xl flex items-center justify-center neo-shadow hover:neo-shadow-lg hover:-translate-x-0.5 transition-all z-10"
+          aria-label="Previous image"
         >
           ←
         </button>
@@ -81,7 +86,7 @@ export const ImageViewer = ({ images, initialIndex, onClose }: ImageViewerProps)
 
       {/* Image */}
       <div
-        className={`w-full h-full flex items-center justify-center select-none ${zoomed ? 'overflow-auto cursor-zoom-out p-4' : 'cursor-zoom-in p-8'}`}
+        className={`w-full h-full flex items-center justify-center select-none ${zoomed ? 'overflow-auto cursor-zoom-out p-4' : 'cursor-zoom-in p-4 sm:p-8'}`}
         onClick={(e) => {
           if (e.target === e.currentTarget) return;
           setZoomed((z) => !z);
@@ -90,7 +95,7 @@ export const ImageViewer = ({ images, initialIndex, onClose }: ImageViewerProps)
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img
           src={current}
-          alt={`Image ${index + 1}`}
+          alt={`Photo ${index + 1}`}
           className={zoomed
             ? 'max-w-none max-h-none border-4 border-white'
             : 'max-h-full max-w-full object-contain border-4 border-white neo-shadow-lg'
@@ -104,6 +109,7 @@ export const ImageViewer = ({ images, initialIndex, onClose }: ImageViewerProps)
         <button
           onClick={goNext}
           className="absolute right-4 top-1/2 -translate-y-1/2 w-12 h-12 bg-neo-yellow border-4 border-black text-black font-black text-xl flex items-center justify-center neo-shadow hover:neo-shadow-lg hover:translate-x-0.5 transition-all z-10"
+          aria-label="Next image"
         >
           →
         </button>

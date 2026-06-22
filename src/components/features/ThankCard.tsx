@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 import { Card } from '@/components/ui/Card';
 import { ImageViewer } from './ImageViewer';
 import { VerificationBadge } from './VerificationBadge';
@@ -24,11 +25,13 @@ interface ThankCardProps {
 function Avatar({ src, name }: { src?: string | null; name: string }) {
   if (src) {
     return (
-      // eslint-disable-next-line @next/next/no-img-element
-      <img
+      <Image
         src={src}
         alt={name}
-        className="w-11 h-11 border-2 border-black object-cover neo-shadow-sm flex-shrink-0"
+        width={44}
+        height={44}
+        className="border-2 border-black object-cover neo-shadow-sm flex-shrink-0"
+        unoptimized
       />
     );
   }
@@ -76,6 +79,8 @@ export const ThankCard = ({ thank }: ThankCardProps) => {
               <button
                 onClick={() => setShowMenu(!showMenu)}
                 className="text-xs font-bold px-2 py-1 border-2 border-black bg-white hover:bg-black/5 transition-colors leading-none"
+                aria-label="More options"
+                aria-expanded={showMenu}
               >
                 ⋯
               </button>
@@ -84,8 +89,9 @@ export const ThankCard = ({ thank }: ThankCardProps) => {
                   <button
                     onClick={() => { setShowMenu(false); setShowReport(true); }}
                     className="w-full text-left px-3 py-2 text-xs font-bold uppercase hover:bg-neo-pink/30 transition-colors"
+                    aria-label="Report this thank"
                   >
-                    🚩 Report
+                    Report
                   </button>
                 </div>
               )}
@@ -147,7 +153,7 @@ export const ThankCard = ({ thank }: ThankCardProps) => {
 
         {imageUrls.length > 0 && (
           <div className={`${thank.tags.length > 0 ? 'mt-3 pt-3 border-t-2 border-black/10' : 'mt-3'} ${
-            imageUrls.length === 1 ? '' : 'grid grid-cols-2 gap-2'
+            imageUrls.length === 1 ? '' : 'grid grid-cols-2 sm:grid-cols-3 gap-2'
           }`}>
             {imageUrls.map((url, i) => (
               <button

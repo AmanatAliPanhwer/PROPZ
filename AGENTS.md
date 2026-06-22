@@ -9,32 +9,47 @@ This version has breaking changes — APIs, conventions, and file structure may 
 # PROPZ (THANK Platform) — Agent Rules
 
 ## Overview
-Neo Brutalist MVP for public worker appreciation. Users send "Thanks" to workers (colleagues, employees). Each Thank has a note, optional tags, and a verified badge.
+Neo Brutalist MVP for public worker appreciation. Users send "Thanks" to workers. Each Thank has a note, optional tags, optional images, and a verified badge.
 
 ## Stack
 - **Framework**: Next.js 16.2.9 (App Router, Turbopack default)
 - **Language**: TypeScript 5.x
 - **Styling**: Tailwind CSS v4
-- **Database**: SQLite via Prisma ORM v7
+- **Database**: PostgreSQL via Prisma ORM v7 (adapter-pg)
+- **Auth**: Supabase Auth (Email/Password + Google OAuth, SSR via proxy.ts)
+- **Storage**: Supabase Storage (thank-images, profile-pictures buckets)
 - **Font**: Space Grotesk (via next/font)
+- **Icons**: react-icons (FiCamera)
 
 ## Architecture
 ```
 src/
 ├── app/                          # App Router pages
-│   ├── layout.tsx                # Root layout (Header + Sidebar + main)
+│   ├── layout.tsx                # Root layout (Header + main)
 │   ├── page.tsx                  # Home — global feed
-│   ├── dashboard/page.tsx        # User stats + all workers
+│   ├── loading.tsx/error.tsx/not-found.tsx
+│   ├── dashboard/page.tsx        # User stats + workers grid
 │   ├── profile/[id]/page.tsx     # Worker profile
-│   └── thank/new/page.tsx        # Create Thank form
+│   ├── thank/new/page.tsx        # Create Thank form
+│   ├── workers/page.tsx          # Browse workers
+│   ├── verify/page.tsx           # Verification request
+│   ├── admin/{page,moderation,verifications}/
+│   ├── login/register/onboarding/suspended/
+│   ├── auth/callback/route.ts    # OAuth handler
+│   └── api/                      # thanks, auth/me, auth/sync-user
 ├── components/
-│   ├── layout/                   # Header, Sidebar
-│   ├── ui/                       # Button, Card, Input/Textarea
-│   └── features/                 # ThankCard, ThankForm, StatsCard
+│   ├── layout/                   # Header
+│   ├── ui/                       # Button, Card, Input, Textarea, Skeleton, ErrorCard
+│   └── features/                 # ThankCard/ThankList/ThankForm, StatsCard,
+│                                 # DashboardProfile, ImageViewer, InlineSearch,
+│                                 # ReportModal, VerificationBadge, *Skeleton variants
 ├── lib/
-│   ├── prisma.ts                 # PrismaClient v7 singleton (adapter-based)
+│   ├── prisma.ts                 # PrismaClient v7 singleton (adapter-pg)
 │   ├── queries.ts                # DB query helpers
-│   └── actions.ts                # Server Actions
+│   ├── actions.ts                # Server Actions
+│   ├── rate-limit.ts             # IP-based sliding window rate limiter
+│   └── supabase/                 # client.ts, server.ts, admin.ts
+├── proxy.ts                      # Supabase Auth SSR proxy
 └── generated/prisma/             # Prisma client output (gitignored)
 ```
 
@@ -50,6 +65,8 @@ src/
 User   1──N SentThanks     (senderId)
 User   1──N ReceivedThanks (receiverId)
 Thank  N──M Tag            (via _ThankTags join table)
+User   1──N VerificationRequest
+Thank  1──N Report
 ```
 See `prisma/schema.prisma` for full schema.
 
@@ -58,7 +75,7 @@ See `prisma/schema.prisma` for full schema.
 - Output: `../src/generated/prisma`
 - Import from: `@/generated/prisma/client` (NOT `@prisma/client`)
 - PrismaClient constructor accepts `{ adapter }` — NO `datasources` or `datasourceUrl`
-- Driver adapter: `@prisma/adapter-better-sqlite3` with `better-sqlite3`
+- Driver adapter: `@prisma/adapter-pg` with `pg` package
 
 ## Next.js 16 Gotchas
 - `params` and `searchParams` are async — must `await` them
@@ -67,10 +84,19 @@ See `prisma/schema.prisma` for full schema.
 - Use `next/navigation` for `redirect()`
 - `next lint` removed — use `npx eslint .` instead
 
-## Mock Auth
-- No auth/wallet system in MVP
-- First user in the database is treated as "current user"
-- `getUserById('first')` returns the first user as a workaround
+## Supabase Auth
+- Users sign up via Supabase Auth (Email/Password or Google OAuth)
+- Auth session managed via `@supabase/ssr` (cookies) with proxy.ts
+- Browser client: `createClient()` from `@/lib/supabase/client`
+- Server client: `createServerSupabaseClient()` from `@/lib/supabase/server`
+- Admin client (bypasses RLS): `createAdminClient()` from `@/lib/supabase/admin`
+
+## Supabase Storage
+- Two buckets: `thank-images` (public) and `profile-pictures` (public)
+- RLS policies: public SELECT, authenticated INSERT
+- Upload from browser via `createClient()` (needs valid auth session)
+- Storage deletes in server actions use `createAdminClient()` to bypass RLS
+- Manual public URL construction: `${SUPABASE_URL}/storage/v1/object/public/thank-images/${filename}`
 
 ## Commands
 | Command | Purpose |
@@ -87,9 +113,17 @@ See `prisma/schema.prisma` for full schema.
 | File | Purpose |
 |------|---------|
 | `src/lib/prisma.ts` | PrismaClient singleton with v7 adapter |
-| `src/lib/queries.ts` | `getThanksFeed()`, `getUserById()`, `getUserStats()`, `getWorkers()`, `getAllTags()` |
-| `src/lib/actions.ts` | `createThank()`, `createUser()` server actions |
+| `src/lib/queries.ts` | getCurrentUser, getThanksFeed, getUserById, getUserStats, getWorkers, getAllTags |
+| `src/lib/actions.ts` | createThank, createUser, updateProfile, removeThank, flagThank, etc. |
+| `src/lib/rate-limit.ts` | IP-based sliding window rate limiter for API routes |
+| `src/lib/supabase/admin.ts` | Admin client (service role key, bypasses RLS) |
+| `src/lib/supabase/client.ts` | Browser client (anon key, auth session from cookies) |
+| `src/lib/supabase/server.ts` | Server client (anon key, cookie management) |
+| `src/proxy.ts` | Supabase Auth SSR proxy (cookie handling) |
+| `prisma/schema.prisma` | Full database schema (User, Thank, Tag, VerificationRequest, Report) |
 | `prisma/seed.ts` | Sample data: 6 workers with professions, 9 tags, 7 inter-related thanks |
+| `supabase/storage-policies.sql` | RLS policies for Storage buckets |
+| `scripts/migrate-existing-images.ts` | Migrate legacy images from public/uploads/ to Supabase Storage |
 
 ## Rules for AI Agents
 - All code goes in `src/` directory

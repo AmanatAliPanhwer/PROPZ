@@ -1,5 +1,11 @@
+import type { Metadata } from 'next';
 import { Suspense } from 'react';
 import { LoginForm } from '@/components/auth/LoginForm';
+
+export const metadata: Metadata = {
+  title: 'Sign In - PROPZ',
+  description: 'Sign in to your PROPZ account.',
+};
 
 export default function LoginPage() {
   return (

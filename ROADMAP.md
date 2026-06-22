@@ -100,22 +100,25 @@ Status markers: [x] done  [~] in progress  [ ] planned  [-] future
 ## Phase 5 — Token Economy ($THANK)
 
 ### Wallet Integration
-- [ ] Wallet connection (browser extension, mobile wallet)
-- [ ] Wallet address on profile
-- [ ] Balance display
+- [x] Wallet connection (RainbowKit + wagmi, Polygon Amoy)
+- [x] Wallet address on profile
+- [-] Balance display (client component, needs deployed contract)
 
 ### Reward System
-- [ ] Treasury-based reward distribution
-- [ ] Verified thanks trigger reward eligibility
-- [ ] Trust score weighting for reward amount
-- [ ] Reward history page
+- [x] Treasury-based reward distribution (ThankReward contract)
+- [x] Verified thanks trigger reward eligibility
+- [x] Trust score weighting for reward amount
+- [x] Reward history page
 
-### Smart Contracts
-- [ ] Reward worker function
-- [ ] Record verified thank on-chain
-- [ ] Treasury management
-- [ ] Emergency pause
-- [ ] Token transfer
+### Smart Contracts (Solidity, tested — deploy to Amoy pending)
+- [x] THANKToken.sol — capped ERC20 ($THANK), minter/burner roles
+- [x] ThankReward.sol — rewardWorker(), treasury, pausable, events
+- [x] Hardhat tests — 17 passing
+- [x] Prisma models (Reward, walletAddress, txHash)
+- [x] issueReward server action (viem)
+- [x] verifyThank admin action (verify + reward in one step)
+- [-] Deploy to Polygon Amoy testnet
+- [-] Contract verification on Polygonscan
 
 ---
 

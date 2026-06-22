@@ -1,7 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
+import { rateLimit, getClientIp } from '@/lib/rate-limit';
 
 export async function GET(request: NextRequest) {
+  const ip = getClientIp(request);
+  if (!rateLimit(`thanks:${ip}`, 60, 60000)) {
+    return NextResponse.json({ error: 'Too many requests' }, { status: 429 });
+  }
   const { searchParams } = new URL(request.url);
   const receiverId = searchParams.get('receiverId');
   const cursor = searchParams.get('cursor');

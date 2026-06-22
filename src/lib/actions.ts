@@ -4,6 +4,8 @@ import { prisma } from '@/lib/prisma';
 import { revalidatePath } from 'next/cache';
 import { redirect } from 'next/navigation';
 import { createServerSupabaseClient } from '@/lib/supabase/server';
+import { createAdminClient } from '@/lib/supabase/admin';
+import { issueReward } from '@/lib/blockchain/reward';
 
 async function getAuthUser() {
   const supabase = await createServerSupabaseClient();
@@ -79,12 +81,13 @@ export async function createThank(formData: FormData) {
     throw new Error('You have already sent this exact thank you message recently. Please write something different.');
   }
 
-  await prisma.thank.create({
+  const created = await prisma.thank.create({
     data: {
       senderId,
       receiverId,
       note,
       images: JSON.stringify(images),
+      isVerified: false,
       tags: {
         connectOrCreate: tagNames.filter(Boolean).map((name) => ({
           where: { name },
@@ -100,6 +103,13 @@ export async function createThank(formData: FormData) {
   // Update trust score after sending
   await recalculateTrustScore(senderId);
   await recalculateTrustScore(receiverId);
+
+  // Issue blockchain reward (fire-and-forget — safe if contracts not deployed)
+  if (created.isVerified) {
+    issueReward(created.id, receiverId).catch((err) =>
+      console.error('[blockchain] Background reward failed:', err)
+    );
+  }
 
   revalidatePath('/');
   revalidatePath(`/profile/${receiverId}`);
@@ -274,6 +284,31 @@ export async function rejectVerification(requestId: string, notes: string) {
   revalidatePath('/admin/verifications');
 }
 
+export async function verifyThank(thankId: string) {
+  const admin = await requireAdmin();
+
+  const thank = await prisma.thank.findUnique({ where: { id: thankId } });
+  if (!thank) throw new Error('Thank not found');
+  if (thank.isVerified) throw new Error('Thank is already verified');
+
+  await prisma.thank.update({
+    where: { id: thankId },
+    data: { isVerified: true },
+  });
+
+  await recalculateTrustScore(thank.receiverId);
+
+  // Issue blockchain reward
+  issueReward(thankId, thank.receiverId).catch((err) =>
+    console.error('[blockchain] verify reward failed:', err)
+  );
+
+  revalidatePath('/');
+  revalidatePath(`/profile/${thank.receiverId}`);
+  revalidatePath(`/profile/${thank.senderId}`);
+  revalidatePath('/admin');
+}
+
 // ── Moderation Actions ──
 
 export async function reportThank(formData: FormData) {
@@ -347,6 +382,17 @@ export async function removeThank(thankId: string) {
   const thank = await prisma.thank.findUnique({ where: { id: thankId } });
   if (!thank) throw new Error('Thank not found');
 
+  // Clean up images from Supabase Storage (use admin client to bypass RLS)
+  const supabase = createAdminClient();
+  const imageUrls: string[] = JSON.parse(thank.images || '[]');
+  for (const url of imageUrls) {
+    const filename = url.split('/').pop();
+    if (filename) {
+      await supabase.storage.from('thank-images').remove([filename]);
+    }
+  }
+
+  await prisma.report.deleteMany({ where: { thankId } });
   await prisma.thank.delete({ where: { id: thankId } });
 
   revalidatePath('/admin/moderation');

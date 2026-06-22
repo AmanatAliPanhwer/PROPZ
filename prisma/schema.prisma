@@ -30,6 +30,8 @@ model User {
   reviewedRequests  VerificationRequest[]    @relation("VerificationRequestReviewer")
   reports          Report[]              @relation("ReportReporter")
   resolvedReports  Report[]              @relation("ReportResolver")
+  walletAddress    String?
+  rewards          Reward[]
 }
 
 model Thank {
@@ -51,6 +53,7 @@ model Thank {
   flaggedAt  DateTime?
   flagReason String?
   reports    Report[]
+  reward     Reward?
 }
 
 model Tag {
@@ -85,7 +88,19 @@ model Report {
   resolvedAt  DateTime?
   resolvedById String?
 
-  thank    Thank  @relation(fields: [thankId], references: [id])
+  thank    Thank  @relation(fields: [thankId], references: [id], onDelete: Cascade)
   reporter User   @relation("ReportReporter", fields: [reporterId], references: [id])
   resolver User?  @relation("ReportResolver", fields: [resolvedById], references: [id])
+}
+
+model Reward {
+  id        String   @id @default(cuid())
+  userId    String
+  thankId   String   @unique
+  amount    BigInt
+  txHash    String
+  createdAt DateTime @default(now())
+
+  user  User   @relation(fields: [userId], references: [id])
+  thank Thank  @relation(fields: [thankId], references: [id])
 }

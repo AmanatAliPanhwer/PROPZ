@@ -1,6 +1,12 @@
+import type { Metadata } from 'next';
 import { redirect } from 'next/navigation';
 import { getThanksFeed, getCurrentUser } from '@/lib/queries';
 import { ThankList } from '@/components/features/ThankList';
+
+export const metadata: Metadata = {
+  title: 'Global Feed - PROPZ',
+  description: 'Latest appreciation from the community — see who is being thanked.',
+};
 
 export default async function Home() {
   const user = await getCurrentUser();

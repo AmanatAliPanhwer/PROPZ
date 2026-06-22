@@ -1,6 +1,12 @@
+import type { Metadata } from 'next';
 import { redirect } from 'next/navigation';
 import { getCurrentUser } from '@/lib/queries';
 import { VerifyForm } from './VerifyForm';
+
+export const metadata: Metadata = {
+  title: 'Get Verified - PROPZ',
+  description: 'Submit a verification request to earn trust badges on your profile.',
+};
 
 export default async function VerifyPage() {
   const currentUser = await getCurrentUser();

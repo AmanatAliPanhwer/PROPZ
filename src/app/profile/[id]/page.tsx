@@ -1,11 +1,30 @@
+import type { Metadata } from 'next';
 import { redirect, notFound } from 'next/navigation';
+import Image from 'next/image';
 import { getCurrentUser, getUserStats } from '@/lib/queries';
 import { prisma } from '@/lib/prisma';
 import { Card } from '@/components/ui/Card';
 import { StatsCard } from '@/components/features/StatsCard';
 import { ThankList } from '@/components/features/ThankList';
 import { VerificationBadge } from '@/components/features/VerificationBadge';
+import { WalletSection } from '@/components/features/WalletSection';
 import Link from 'next/link';
+
+export async function generateMetadata({
+  params: paramsPromise,
+}: {
+  params: Promise<{ id: string }>;
+}): Promise<Metadata> {
+  const { id } = await paramsPromise;
+  const user = await getUserStats(id);
+  if (!user || !user.name) return { title: 'Profile Not Found - PROPZ' };
+  return {
+    title: `${user.name} - PROPZ`,
+    description: user.profession
+      ? `${user.name} — ${user.profession}. View their profile on PROPZ.`
+      : `View ${user.name}'s profile on PROPZ.`,
+  };
+}
 
 export default async function ProfilePage({
   params: paramsPromise,
@@ -37,11 +56,13 @@ export default async function ProfilePage({
         <div className="flex items-start justify-between">
           <div className="flex items-center gap-4">
             {user.profilePicture && (
-              // eslint-disable-next-line @next/next/no-img-element
-              <img
+              <Image
                 src={user.profilePicture}
                 alt={user.name}
-                className="w-16 h-16 border-4 border-black neo-shadow-sm object-cover"
+                width={64}
+                height={64}
+                className="border-4 border-black neo-shadow-sm object-cover"
+                unoptimized
               />
             )}
             <div>
@@ -77,6 +98,12 @@ export default async function ProfilePage({
         <StatsCard title="Verified" value={user.verifiedCount} color="green" />
         <StatsCard title="Trust Score" value={user.trustScore} color="pink" />
       </div>
+
+      <WalletSection
+        currentWalletAddress={user.walletAddress}
+        userId={currentUser.id}
+        isOwnProfile={currentUser.id === id}
+      />
 
       <div className="flex flex-col gap-3">
         <h2 className="text-lg font-black uppercase">Thanks Received ({user.receivedCount})</h2>

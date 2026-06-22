@@ -1,6 +1,12 @@
+import type { Metadata } from 'next';
 import { redirect } from 'next/navigation';
 import { getCurrentUser, getWorkers } from '@/lib/queries';
 import { WorkersSearch } from './WorkersSearch';
+
+export const metadata: Metadata = {
+  title: 'Workers - PROPZ',
+  description: 'Browse and search all workers on the platform.',
+};
 
 export default async function WorkersPage() {
   const currentUser = await getCurrentUser();

@@ -1,6 +1,12 @@
+import type { Metadata } from 'next';
 import { redirect } from 'next/navigation';
 import { getCurrentUser, getVerificationRequests } from '@/lib/queries';
 import { approveVerification, rejectVerification } from '@/lib/actions';
+
+export const metadata: Metadata = {
+  title: 'Verification Requests - PROPZ',
+  description: 'Admin panel for reviewing worker verification requests.',
+};
 
 export default async function VerificationsPage() {
   const currentUser = await getCurrentUser();

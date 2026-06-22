@@ -1,6 +1,12 @@
+import type { Metadata } from 'next';
 import { redirect } from 'next/navigation';
 import { getCurrentUser, getReports, getFlaggedThanks } from '@/lib/queries';
 import { flagThank, unflagThank, removeThank, suspendUser } from '@/lib/actions';
+
+export const metadata: Metadata = {
+  title: 'Moderation - PROPZ',
+  description: 'Admin panel for moderating reported and flagged content.',
+};
 
 export default async function ModerationPage() {
   const currentUser = await getCurrentUser();

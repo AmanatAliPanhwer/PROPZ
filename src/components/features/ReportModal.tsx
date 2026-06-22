@@ -48,6 +48,9 @@ export const ReportModal = ({ thankId, onClose }: ReportModalProps) => {
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50" onClick={onClose}>
       <div
+        role="dialog"
+        aria-modal="true"
+        aria-label="Report content"
         className="bg-card border-4 border-black neo-shadow-lg p-6 w-full max-w-md"
         onClick={(e) => e.stopPropagation()}
       >
@@ -55,12 +58,13 @@ export const ReportModal = ({ thankId, onClose }: ReportModalProps) => {
           <div className="flex flex-col gap-4">
             <h3 className="text-lg font-black uppercase">Report Submitted</h3>
             <p className="text-sm">Thank you. Our moderation team will review this report.</p>
-            <button
-              onClick={onClose}
-              className="px-4 py-2 bg-neo-yellow border-4 border-black font-bold text-sm neo-shadow hover:neo-shadow-lg transition-all self-start"
-            >
-              Close
-            </button>
+              <button
+                onClick={onClose}
+                className="px-4 py-2 bg-neo-yellow border-4 border-black font-bold text-sm neo-shadow hover:neo-shadow-lg transition-all self-start"
+                aria-label="Close report confirmation"
+              >
+                Close
+              </button>
           </div>
         ) : (
           <form onSubmit={handleSubmit} className="flex flex-col gap-4">
@@ -97,6 +101,7 @@ export const ReportModal = ({ thankId, onClose }: ReportModalProps) => {
                 type="button"
                 onClick={onClose}
                 className="px-4 py-2 bg-white border-4 border-black font-bold text-sm neo-shadow hover:neo-shadow-lg transition-all"
+                aria-label="Cancel report"
               >
                 Cancel
               </button>

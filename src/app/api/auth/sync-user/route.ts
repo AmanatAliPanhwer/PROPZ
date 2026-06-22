@@ -1,8 +1,13 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createServerSupabaseClient } from '@/lib/supabase/server';
 import { prisma } from '@/lib/prisma';
+import { rateLimit, getClientIp } from '@/lib/rate-limit';
 
 export async function POST(request: NextRequest) {
+  const ip = getClientIp(request);
+  if (!rateLimit(`sync-user:${ip}`, 10, 60000)) {
+    return NextResponse.json({ error: 'Too many requests' }, { status: 429 });
+  }
   try {
     const supabase = await createServerSupabaseClient();
     const { data: { user: authUser } } = await supabase.auth.getUser();
@@ -31,6 +36,10 @@ export async function POST(request: NextRequest) {
 }
 
 export async function PATCH(request: NextRequest) {
+  const ip = getClientIp(request);
+  if (!rateLimit(`sync-user-patch:${ip}`, 10, 60000)) {
+    return NextResponse.json({ error: 'Too many requests' }, { status: 429 });
+  }
   try {
     const supabase = await createServerSupabaseClient();
     const { data: { user: authUser } } = await supabase.auth.getUser();
@@ -38,7 +47,7 @@ export async function PATCH(request: NextRequest) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const { authId, name, profession, bio, profilePicture } = await request.json();
+    const { authId, name, profession, bio, profilePicture, walletAddress } = await request.json();
 
     if (authId !== authUser.id) {
       return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
@@ -49,6 +58,7 @@ export async function PATCH(request: NextRequest) {
     if (profession !== undefined) data.profession = profession;
     if (bio !== undefined) data.bio = bio;
     if (profilePicture !== undefined) data.profilePicture = profilePicture;
+    if (walletAddress !== undefined) data.walletAddress = walletAddress;
 
     const user = await prisma.user.update({
       where: { authId },

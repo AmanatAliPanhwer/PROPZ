@@ -9,7 +9,7 @@
 
 import { createClient } from '@supabase/supabase-js';
 import { readFileSync, readdirSync } from 'fs';
-import { join } from 'path';
+import { join, extname } from 'path';
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -22,16 +22,26 @@ async function main() {
   const files = readdirSync(SOURCE_DIR).filter((f) => f !== '.gitkeep');
   console.log(`Found ${files.length} files to migrate:\n`);
 
+  const contentTypeMap: Record<string, string> = {
+    '.jpg': 'image/jpeg',
+    '.jpeg': 'image/jpeg',
+    '.png': 'image/png',
+    '.webp': 'image/webp',
+    '.gif': 'image/gif',
+  };
+
   for (const file of files) {
     const filePath = join(SOURCE_DIR, file);
     const buffer = readFileSync(filePath);
+    const ext = extname(file).toLowerCase();
+    const contentType = contentTypeMap[ext] || 'application/octet-stream';
 
     console.log(`  Uploading ${file}...`);
 
     const { data, error } = await supabase.storage
       .from('thank-images')
       .upload(file, buffer, {
-        contentType: undefined,
+        contentType,
         upsert: true,
       });
 

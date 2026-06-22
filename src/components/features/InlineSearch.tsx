@@ -2,6 +2,7 @@
 
 import { useState, useRef, useEffect, useCallback } from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 import { FiSearch, FiX } from 'react-icons/fi';
 import { searchWorkers } from '@/lib/actions';
 
@@ -69,7 +70,8 @@ export const InlineSearch = () => {
       <button
         onClick={() => setIsOpen((o) => !o)}
         className="p-2 border-2 border-black transition-all hover:bg-black/10"
-        title="Search workers"
+        aria-label="Search workers"
+        aria-expanded={isOpen}
       >
         <FiSearch className="w-4 h-4" />
       </button>
@@ -85,9 +87,10 @@ export const InlineSearch = () => {
               value={query}
               onChange={(e) => setQuery(e.target.value)}
               className="w-full px-3 py-3 text-sm font-medium focus:outline-none"
+              aria-label="Search workers by name"
             />
             {query && (
-              <button onClick={() => setQuery('')} className="mr-2 text-black/40 hover:text-black">
+              <button onClick={() => setQuery('')} className="mr-2 text-black/40 hover:text-black" aria-label="Clear search">
                 <FiX className="w-4 h-4" />
               </button>
             )}
@@ -108,8 +111,7 @@ export const InlineSearch = () => {
                 className="flex items-center gap-3 px-4 py-3 hover:bg-black/5 transition-colors border-b border-black/10 last:border-b-0"
               >
                 {w.profilePicture ? (
-                  // eslint-disable-next-line @next/next/no-img-element
-                  <img src={w.profilePicture} alt="" className="w-8 h-8 border-2 border-black object-cover flex-shrink-0" />
+                  <Image src={w.profilePicture} alt={w.name} width={32} height={32} className="border-2 border-black object-cover flex-shrink-0" unoptimized />
                 ) : (
                   <div className="w-8 h-8 border-2 border-black bg-white flex items-center justify-center text-xs font-black uppercase flex-shrink-0">
                     {w.name.charAt(0)}

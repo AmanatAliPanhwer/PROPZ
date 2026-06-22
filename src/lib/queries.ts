@@ -58,7 +58,7 @@ export async function getUserStats(id: string) {
     prisma.thank.count({ where: { receiverId: id, isVerified: true } }),
     prisma.user.findUnique({
       where: { id },
-      select: { id: true, trustScore: true, name: true, profession: true, bio: true, profilePicture: true, createdAt: true },
+      select: { id: true, trustScore: true, name: true, profession: true, bio: true, profilePicture: true, walletAddress: true, verificationLevel: true, createdAt: true },
     }),
   ]);
 

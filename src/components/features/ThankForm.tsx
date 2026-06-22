@@ -1,6 +1,6 @@
 'use client'
 
-import { useActionState, useState, useRef, useCallback } from 'react';
+import { useActionState, useState, useRef, useCallback, useEffect } from 'react';
 import { Textarea } from '@/components/ui/Input';
 import { Button } from '@/components/ui/Button';
 import { Card } from '@/components/ui/Card';
@@ -35,6 +35,27 @@ export const ThankForm = ({ senderId, workers, tags, preselectedReceiverId }: Th
   const cameraRef = useRef<HTMLInputElement>(null);
   const supabase = createClient();
   const otherWorkers = workers.filter((w) => w.id !== senderId);
+
+  const uploadedUrlsRef = useRef<string[]>([]);
+
+  // Track successfully uploaded URLs for cleanup on unmount
+  useEffect(() => {
+    uploadedUrlsRef.current = uploads.filter((u) => u.status === 'done' && u.url).map((u) => u.url!);
+  }, [uploads]);
+
+  // Clean up orphaned uploads if user navigates away without submitting
+  useEffect(() => {
+    return () => {
+      const urls = uploadedUrlsRef.current;
+      if (urls.length === 0) return;
+      for (const url of urls) {
+        const filename = url.split('/').pop();
+        if (filename) {
+          supabase.storage.from('thank-images').remove([filename]).catch(() => {});
+        }
+      }
+    };
+  }, [supabase]);
 
   const [state, formAction, pending] = useActionState(
     async (_prev: unknown, formData: FormData) => {
@@ -190,7 +211,7 @@ export const ThankForm = ({ senderId, workers, tags, preselectedReceiverId }: Th
             onDragOver={handleDragOver}
             onDragLeave={handleDragLeave}
             onClick={() => fileRef.current?.click()}
-            className={`border-4 border-black neo-shadow-sm p-8 text-center cursor-pointer transition-all ${
+            className={`border-4 border-black neo-shadow-sm p-6 sm:p-8 text-center cursor-pointer transition-all ${
               dragOver ? 'bg-neo-yellow scale-[1.02]' : 'bg-card hover:bg-neo-yellow/50'
             }`}
           >
@@ -226,7 +247,7 @@ export const ThankForm = ({ senderId, workers, tags, preselectedReceiverId }: Th
 
           {/* Upload previews */}
           {uploads.length > 0 && (
-            <div className="grid grid-cols-3 gap-2 mt-2">
+            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-2 mt-2">
               {uploads.map((u) => (
                 <div key={u.id} className="relative group border-4 border-black neo-shadow-sm bg-card">
                   {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -261,6 +282,7 @@ export const ThankForm = ({ senderId, workers, tags, preselectedReceiverId }: Th
                     type="button"
                     onClick={() => removeUpload(u.id)}
                     className="absolute -top-2 -right-2 w-5 h-5 bg-black border-2 border-white text-white font-bold text-[10px] flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity hover:scale-110"
+                    aria-label="Remove uploaded image"
                   >
                     X
                   </button>

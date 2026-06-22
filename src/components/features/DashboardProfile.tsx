@@ -3,6 +3,7 @@
 import { useState, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
+import Image from 'next/image'
 import { createClient } from '@/lib/supabase/client'
 import { updateProfile } from '@/lib/actions'
 import { Button } from '@/components/ui/Button'
@@ -104,8 +105,7 @@ export const DashboardProfile = ({ user: initialUser }: DashboardProfileProps) =
             className="w-14 h-14 shrink-0 border-4 border-black neo-shadow-sm bg-card flex items-center justify-center cursor-pointer hover:bg-neo-yellow/50 transition-all overflow-hidden"
           >
             {currentPic ? (
-              // eslint-disable-next-line @next/next/no-img-element
-              <img src={currentPic} alt="Profile" className="w-full h-full object-cover" />
+              <Image src={currentPic} alt="Profile" width={56} height={56} className="object-cover w-full h-full" unoptimized />
             ) : (
               <span className="text-2xl font-black text-black/30">+</span>
             )}
@@ -156,11 +156,13 @@ export const DashboardProfile = ({ user: initialUser }: DashboardProfileProps) =
   return (
     <div className="flex items-center gap-4">
       {currentPic && (
-        // eslint-disable-next-line @next/next/no-img-element
-        <img
+        <Image
           src={currentPic}
           alt={userData.name}
-          className="w-14 h-14 border-4 border-black neo-shadow-sm object-cover"
+          width={56}
+          height={56}
+          className="border-4 border-black neo-shadow-sm object-cover"
+          unoptimized
         />
       )}
       <div className="flex-1">
@@ -176,6 +178,7 @@ export const DashboardProfile = ({ user: initialUser }: DashboardProfileProps) =
         <Link
           href="/verify"
           className="px-4 py-1.5 border-2 border-black bg-white text-black font-bold text-xs uppercase neo-shadow-sm hover:bg-neo-yellow transition-all shrink-0"
+          aria-label="Get verified"
         >
           Verify
         </Link>
@@ -191,6 +194,7 @@ export const DashboardProfile = ({ user: initialUser }: DashboardProfileProps) =
           setEditing(true)
         }}
         className="px-4 py-1.5 border-2 border-black bg-white text-black font-bold text-xs uppercase neo-shadow-sm hover:bg-neo-yellow transition-all shrink-0"
+        aria-label="Edit profile"
       >
         Edit
       </button>

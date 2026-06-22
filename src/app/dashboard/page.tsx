@@ -1,3 +1,4 @@
+import type { Metadata } from 'next';
 import { redirect } from 'next/navigation';
 import { getCurrentUser } from '@/lib/queries';
 import { prisma } from '@/lib/prisma';
@@ -5,6 +6,11 @@ import { StatsCard } from '@/components/features/StatsCard';
 import { DashboardProfile } from '@/components/features/DashboardProfile';
 import { ThankList } from '@/components/features/ThankList';
 import Link from 'next/link';
+
+export const metadata: Metadata = {
+  title: 'Dashboard - PROPZ',
+  description: 'Your profile, stats, and thanks received.',
+};
 
 export default async function DashboardPage() {
   const currentUser = await getCurrentUser();
